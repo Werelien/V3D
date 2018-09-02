@@ -61,7 +61,8 @@ void UpdateScreenWH(SysF32 FOVAngle) {
   }
   ScreenW=w;ScreenH=h;
 }
-
+SysU32 DebugFlags=0;
+SysS32 Segments=8;
 void RenderCubes(int n, int s, int t, bool LineMode, int LineWidth,
                  SysF32 Opacity, SysU32 RGB = 0xffffff, SysU32 A = 0xff) {
   GFXShaderM4(0, ProjM);
@@ -91,7 +92,7 @@ void RenderCubes(int n, int s, int t, bool LineMode, int LineWidth,
   static int Init = 0,BoneMatrix=0;
   if (!Init) {
   	for(int i=0;i<8;i++) {vb[i].s=1;vb[i].t=BoneMatrix;}
-	GFXCreateRods(8,0,vb,ibll,iblln>>1,&bvi[1],&RodsVerts,&RodsIndices);
+	GFXCreateRods(Segments,vb,ibll,iblln>>1,&bvi[1],&RodsVerts,&RodsIndices);
 	GFXBufferVerts(&bvi[0], vb, 8);
 	GFXBufferIndices(&bvi[0], ibl, ibln);
 	Init = 1;
@@ -122,8 +123,10 @@ void RenderCubes(int n, int s, int t, bool LineMode, int LineWidth,
       GFXShaderV4(0, Opacity * rgba[0], Opacity * rgba[1], Opacity * rgba[2],
                   Opacity * rgba[3]);
       GFXShaderV4(1,lw,lw,lw,1);
-      //GFXVerts(GFX_LINES, RodsVerts, RodsIndices, &bvi[1]);
-      GFXVerts(GFX_TRIANGLES, RodsVerts, RodsIndices, &bvi[1]);
+      if(DebugFlags&1)
+      	GFXVerts(GFX_LINE_STRIP, RodsVerts, RodsIndices, &bvi[1]);
+      else
+      	GFXVerts(GFX_TRIANGLES, RodsVerts, RodsIndices, &bvi[1]);
     } else {
       GFXShaderV4(0, Opacity, Opacity, Opacity, Opacity);
       GFXShaderV4(1,0,0,0,0);
@@ -146,7 +149,7 @@ void RenderText(int n,int s,int t,const SysF32 *ScaleM,SysF32 LineWidth)
 #if FONTRODS
 	const int BoneMatrix=0;
 	for(int i=0;i<Vs;i++) {TxtV[i].s=20;TxtV[i].t=BoneMatrix;}
-	GFXCreateRods(8,0,TxtV,TxtI,Is>>1,&bvi,&Vs,&Is);
+	GFXCreateRods(Segments,TxtV,TxtI,Is>>1,&bvi,&Vs,&Is);
 #else
         GFXBufferVerts(&bvi, TxtV, Vs);
         GFXBufferIndices(&bvi,TxtI,Is);
@@ -181,7 +184,10 @@ void RenderText(int n,int s,int t,const SysF32 *ScaleM,SysF32 LineWidth)
         if(ScreenW>ScreenH) lw=2.0f/ScreenW; else lw=2.0f/ScreenH;
 	lw*=LineWidth;
         GFXShaderV4(1,lw,lw,lw,1);
-        GFXVerts(GFX_TRIANGLES,Vs,Is,&bvi);
+      	if(DebugFlags&1)
+      		GFXVerts(GFX_LINE_STRIP, Vs, Is, &bvi);
+      	else
+        	GFXVerts(GFX_TRIANGLES,Vs,Is,&bvi);
 #else
         GFXVerts(GFX_LINES,Vs,Is,&bvi);
 #endif
@@ -277,7 +283,7 @@ SysS32 SysUserFrame(SysS32 Flags) {
         NC = 0;
       SysODS("Objects:%d Blend Factor:%f Line Width:%f\n", NC, BlendFactor, lw);
     }
-    if (SysKeyState[35 + 2]) {
+     if (SysKeyState[35 + 2]) {
       if (SysKeyState[225])
         lw ++;
       else
@@ -285,6 +291,13 @@ SysS32 SysUserFrame(SysS32 Flags) {
       if (lw < 0)
         lw = 0;
       SysODS("Objects:%d Blend Factor:%f Line Width:%f\n", NC, BlendFactor, lw);
+    }
+    if (SysKeyState[35 + 3]) {
+      if (SysKeyState[225])
+        DebugFlags=1;
+      else
+        DebugFlags=0;
+      SysODS("Objects:%d Blend Factor:%f Line Width:%f Debug Flags:%08x\n", NC, BlendFactor, lw,DebugFlags);
     }
     GFXShader(GFX_STANDARDSHADER);
     GFXBlend(GFXBLEND_OFF, GFXBLEND_OFF, 0);

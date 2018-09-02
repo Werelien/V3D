@@ -42,7 +42,7 @@ SysF32 *GFXAxisRotationMatrix(SysF32 *M4x4, const SysF32 *Axis, SysF32 Angle) {
 }
 
 
-void GFXCreateRods(SysS32 Segments,SysF32 CapScale,const GFXV *V,const SysU16 *Index,SysS32 Rods,GFXBVI *vib,SysS32 *Verts,SysS32 *Indices)
+void GFXCreateRods(SysS32 Segments,const GFXV *V,const SysU16 *Index,SysS32 Rods,GFXBVI *vib,SysS32 *Verts,SysS32 *Indices)
 {
 	const SysS32 SingleRodVerts=(Segments*2+2);
 	*Verts=Rods*SingleRodVerts;
@@ -63,15 +63,19 @@ void GFXCreateRods(SysS32 Segments,SysF32 CapScale,const GFXV *V,const SysU16 *I
 		V3Sub(rndv,rndv,&(rv[0].x));
 		V3Cross(rndv,rndv,&(dv.x));
 		V3Normalize(&(nv.x),rndv);
+		V3Normalize(&(dv.x),&(dv.x));
+
+		SysF32 lo[3];
+		V3SMul(lo,&(dv.x),1.0f);
 		SysS32 vocheck=vo;
 		v[vo]=rv[0];
-		V3SMul(&(v[vo].u),&(dv.x),-rv[0].s*CapScale);
+		V3SMul(&(v[vo].u),lo,-rv[0].s);
 		vo++;
 		
 		v[vo]=rv[1];
-		V3SMul(&(v[vo].u),&(dv.x),rv[1].s*CapScale);
+		V3SMul(&(v[vo].u),lo,rv[1].s);
 		vo++;
-		
+
 		for(int s=0;s<Segments;s++)
 		{
 		  GFXAxisRotationMatrix(RotM,&(dv.x),s*(acosf(-1)*2)/Segments);
