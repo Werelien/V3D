@@ -21,8 +21,14 @@ call vundle#end()            " required
 
 filetype plugin indent on    " required
 
-
 syntax on
+
+nnoremap <leader>ev :vsplit .vimrc<cr>
+nnoremap <leader>sv :source .vimrc<cr>
+nnoremap <leader>r :!./ReleaseBuildAndRun.sh<cr>
+nnoremap <leader>d :!./DebugBuildAndRun.sh<cr>
+nnoremap <leader>e :!./EmscriptenBuild.sh<cr>
+nnoremap <leader>f :!./FDebugEmscripten.sh<cr>
 set backspace=indent,eol,start
 set mouse=a
 set number

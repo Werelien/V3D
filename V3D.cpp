@@ -88,9 +88,9 @@ void RenderCubes(int n, int s, int t, bool LineMode, int LineWidth,
   static GFXBVI bvi[2] = {{0, 0, 0}, {0, 0, 0}};
   static SysS32 RodsVerts,RodsIndices;
 
-  static int Init = 0;
+  static int Init = 0,BoneMatrix=0;
   if (!Init) {
-  	for(int i=0;i<8;i++) vb[i].t=1;
+  	for(int i=0;i<8;i++) {vb[i].s=1;vb[i].t=BoneMatrix;}
 	GFXCreateRods(8,0,vb,ibll,iblln>>1,&bvi[1],&RodsVerts,&RodsIndices);
 	GFXBufferVerts(&bvi[0], vb, 8);
 	GFXBufferIndices(&bvi[0], ibl, ibln);
@@ -144,7 +144,8 @@ void RenderText(int n,int s,int t,const SysF32 *ScaleM,SysF32 LineWidth)
         SysU16 *TxtI;
         GFXText("1,2,3,4... Cubes abound!",&TxtV,&Vs,&TxtI,&Is,&W,&H);
 #if FONTRODS
-	for(int i=0;i<Vs;i++) TxtV[i].t=20;
+	const int BoneMatrix=0;
+	for(int i=0;i<Vs;i++) {TxtV[i].s=20;TxtV[i].t=BoneMatrix;}
 	GFXCreateRods(8,0,TxtV,TxtI,Is>>1,&bvi,&Vs,&Is);
 #else
         GFXBufferVerts(&bvi, TxtV, Vs);

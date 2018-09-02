@@ -55,6 +55,8 @@ void GFXCreateRods(SysS32 Segments,SysF32 CapScale,const GFXV *V,const SysU16 *I
 	for(int r=0;r<Rods;r++)
 	{
 		const GFXV rv[2]={V[Index[r*2]],V[Index[r*2+1]]};
+		SysODS("Line Vert 0:%f %f,%f, 0x%08x, %f,%f,%f,%f\n",rv[0].x,rv[0].y,rv[0].z,rv[0].rgba,rv[0].u,rv[0].v,rv[0].s,rv[0].t);
+		SysODS("Line Vert 1:%f %f,%f, 1x%08x, %f,%f,%f,%f\n",rv[1].x,rv[1].y,rv[1].z,rv[1].rgba,rv[1].u,rv[1].v,rv[1].s,rv[1].t);
 		GFXV dv,nv;
 		SysF32 rndv[3]={7477,-2953,1021};
 		V3Sub(&(dv.x),&(rv[1].x),&(rv[0].x));
@@ -63,13 +65,11 @@ void GFXCreateRods(SysS32 Segments,SysF32 CapScale,const GFXV *V,const SysU16 *I
 		V3Normalize(&(nv.x),rndv);
 		SysS32 vocheck=vo;
 		v[vo]=rv[0];
-		V3SMul(&(v[vo].u),&(dv.x),-v[vo].t*CapScale);
-		v[vo].t=0;
+		V3SMul(&(v[vo].u),&(dv.x),-rv[0].s*CapScale);
 		vo++;
 		
 		v[vo]=rv[1];
-		V3SMul(&(v[vo].u),&(dv.x),v[vo].t*CapScale);
-		v[vo].t=0;
+		V3SMul(&(v[vo].u),&(dv.x),rv[1].s*CapScale);
 		vo++;
 		
 		for(int s=0;s<Segments;s++)
@@ -78,12 +78,10 @@ void GFXCreateRods(SysS32 Segments,SysF32 CapScale,const GFXV *V,const SysU16 *I
 		  SysF32 vn[3];
 		  M4V3Mul(vn,RotM,&(nv.x));
 		  v[vo]=rv[0];
-		  V3SMul(&(v[vo].u),vn,v[vo].t);
-		  v[vo].t=0;
+		  V3SMul(&(v[vo].u),vn,rv[0].s);
 		  vo++;
 		  v[vo]=rv[1];
-		  V3SMul(&(v[vo].u),vn,v[vo].t);
-		  v[vo].t=0;
+		  V3SMul(&(v[vo].u),vn,rv[1].s);
 		  vo++;
 		}
 		SysAssert(SingleRodVerts==(vo-vocheck));
