@@ -82,6 +82,8 @@ struct GFXBVI {
 
 void GFXOpen(void);
 void GFXClose(void);
+SysF32 *GFXAxisRotationMatrix(SysF32 *M4x4, const SysF32 *Axis, SysF32 Angle);
+void GFXCreateRods(SysS32 Segments,SysF32 CapScale,const GFXV *V,const SysU16 *Index,SysS32 Rods,GFXBVI *vib,SysS32 *Verts,SysS32 *Indices);
 SysF32 GFXLineWidthRange(SysF32 *Range);
 void GFXViewPort(SysS32 X, SysS32 Y, SysS32 Width, SysS32 Height);
 void GFXClear(SysU32 RGBA);

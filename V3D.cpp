@@ -42,33 +42,6 @@ SysF32 ProjM[16] = {0, -1, 0, 0, 1, 0, 0, 0, 0, 0, -1, -1, 0, 0, -2, 0};
 
 SysF32 IM[16] = {1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1};
 
-SysF32 *AxisRotationMatrix(SysF32 *M4x4, const SysF32 *Axis, SysF32 Angle) {
-  SysF32 axis[3];
-  V3Normalize(axis, Axis);
-  SysF32 s = sinf(Angle);
-  SysF32 c = cosf(Angle);
-  SysF32 oc = 1.0 - c;
-
-  SysF32 m[16] = {oc * axis[0] * axis[0] + c,
-                  oc * axis[0] * axis[1] - axis[2] * s,
-                  oc * axis[2] * axis[0] + axis[1] * s,
-                  0.0,
-                  oc * axis[0] * axis[1] + axis[2] * s,
-                  oc * axis[1] * axis[1] + c,
-                  oc * axis[1] * axis[2] - axis[0] * s,
-                  0.0,
-                  oc * axis[2] * axis[0] - axis[1] * s,
-                  oc * axis[1] * axis[2] + axis[0] * s,
-                  oc * axis[2] * axis[2] + c,
-                  0.0,
-                  0.0,
-                  0.0,
-                  0.0,
-                  1.0};
-  M4Copy(M4x4, m);
-  return M4x4;
-}
-
 SysU32 ScreenW,ScreenH;
 void UpdateScreenWH(SysF32 FOVAngle) {
   SysU32 w, h;
@@ -88,79 +61,7 @@ void UpdateScreenWH(SysF32 FOVAngle) {
   }
   ScreenW=w;ScreenH=h;
 }
-void CreateRodBuffers(SysS32 Segments,SysF32 CapScale,const GFXV *V,const SysU16 *Index,SysS32 Rods,GFXBVI *vib,SysS32 *Verts,SysS32 *Indices)
-{
-	const SysS32 SingleRodVerts=(Segments*2+2);
-	*Verts=Rods*SingleRodVerts;
-	const SysS32 SingleRodIndices=(Segments*(6+2*3));
-	*Indices=Rods*SingleRodIndices;
-	GFXV *v=(GFXV *)SysScratchMemory;;
-	SysU16 *i=(SysU16 *)(&SysScratchMemory[(*Verts)*sizeof(GFXV)]);
-	SysS32 vo=0,io=0;
-	SysF32 RotM[4*4];
-	for(int r=0;r<Rods;r++)
-	{
-		const GFXV rv[2]={V[Index[r*2]],V[Index[r*2+1]]};
-		GFXV dv,nv;
-		SysF32 rndv[3]={7477,-2953,1021};
-		V3Sub(&(dv.x),&(rv[1].x),&(rv[0].x));
-		V3Sub(rndv,rndv,&(rv[0].x));
-		V3Cross(rndv,rndv,&(dv.x));
-		V3Normalize(&(nv.x),rndv);
-		SysS32 vocheck=vo;
-		v[vo]=rv[0];
-		V3SMul(&(v[vo].u),&(dv.x),-v[vo].t*CapScale);
-		v[vo].t=0;
-		vo++;
-		
-		v[vo]=rv[1];
-		V3SMul(&(v[vo].u),&(dv.x),v[vo].t*CapScale);
-		v[vo].t=0;
-		vo++;
-		
-		for(int s=0;s<Segments;s++)
-		{
-		  AxisRotationMatrix(RotM,&(dv.x),s*(acosf(-1)*2)/Segments);
-		  SysF32 vn[3];
-		  M4V3Mul(vn,RotM,&(nv.x));
-		  v[vo]=rv[0];
-		  V3SMul(&(v[vo].u),vn,v[vo].t);
-		  v[vo].t=0;
-		  vo++;
-		  v[vo]=rv[1];
-		  V3SMul(&(v[vo].u),vn,v[vo].t);
-		  v[vo].t=0;
-		  vo++;
-		}
-		SysAssert(SingleRodVerts==(vo-vocheck));
-		SysS32 iocheck=io;
-		for(int s=0;s<Segments;s++)
-		{
-		  SysS32 s1=(s+1)%Segments;
-		  i[io++]=vocheck+0;i[io++]=vocheck+2+s*2;i[io++]=vocheck+2*s1+2;
-		  i[io++]=vocheck+2+s*2+1;i[io++]=vocheck+2+s*2+0;i[io++]=vocheck+2*s1+2+0;
-		  i[io++]=vocheck+2+s*2+1;i[io++]=vocheck+2+s1*2+0;i[io++]=vocheck+2*s1+2+1;
-		  i[io++]=vocheck+1;i[io++]=vocheck+2+s*2+1;i[io++]=vocheck+2*s1+2+1;
-		}
-		SysAssert(SingleRodIndices==(io-iocheck));
-	}
-	for(int j=0;j<*Verts;j++)
-	{
-		if(!(j%SingleRodVerts)) SysODS("\n");
-		SysODS("Vert %4d: %f %f,%f, 0x%08x, %f,%f,%f,%f   ",j,
-		v[j].x,v[j].y,v[j].z, v[j].rgba, v[j].u, v[j].v, v[j].s, v[j].t);
 
-	}
-	SysODS("Indices:\n");
-	for(int j=0;j<*Indices;j++)
-	{
-		if(!(j%SingleRodIndices)) SysODS("\n");
-		SysODS("%d ",i[j]);
-	}
-	SysODS("\n");
-	GFXBufferVerts(vib, v, Rods*SingleRodVerts);
-	GFXBufferIndices(vib, i, Rods*SingleRodIndices);
-}
 void RenderCubes(int n, int s, int t, bool LineMode, int LineWidth,
                  SysF32 Opacity, SysU32 RGB = 0xffffff, SysU32 A = 0xff) {
   GFXShaderM4(0, ProjM);
@@ -190,7 +91,7 @@ void RenderCubes(int n, int s, int t, bool LineMode, int LineWidth,
   static int Init = 0;
   if (!Init) {
   	for(int i=0;i<8;i++) vb[i].t=1;
-	CreateRodBuffers(8,0,vb,ibll,iblln>>1,&bvi[1],&RodsVerts,&RodsIndices);
+	GFXCreateRods(8,0,vb,ibll,iblln>>1,&bvi[1],&RodsVerts,&RodsIndices);
 	GFXBufferVerts(&bvi[0], vb, 8);
 	GFXBufferIndices(&bvi[0], ibl, ibln);
 	Init = 1;
@@ -209,7 +110,7 @@ void RenderCubes(int n, int s, int t, bool LineMode, int LineWidth,
     v[0] = FHash(-1, 1);
     v[1] = FHash(-1, 1);
     v[2] = FHash(-1, 1);
-    AxisRotationMatrix(m, v, (((t&0xfff)/SysF32(0xfff))  * 2 * acos(-1)));
+    GFXAxisRotationMatrix(m, v, (((t&0xfff)/SysF32(0xfff))  * 2 * acos(-1)));
     m[12] = FHash(-8, 8);
     m[13] = FHash(-8, 8);
     m[14] = FHash(-3, -100);
@@ -244,7 +145,7 @@ void RenderText(int n,int s,int t,const SysF32 *ScaleM,SysF32 LineWidth)
         GFXText("1,2,3,4... Cubes abound!",&TxtV,&Vs,&TxtI,&Is,&W,&H);
 #if FONTRODS
 	for(int i=0;i<Vs;i++) TxtV[i].t=20;
-	CreateRodBuffers(8,0,TxtV,TxtI,Is>>1,&bvi,&Vs,&Is);
+	GFXCreateRods(8,0,TxtV,TxtI,Is>>1,&bvi,&Vs,&Is);
 #else
         GFXBufferVerts(&bvi, TxtV, Vs);
         GFXBufferIndices(&bvi,TxtI,Is);
@@ -261,7 +162,7 @@ void RenderText(int n,int s,int t,const SysF32 *ScaleM,SysF32 LineWidth)
         v[0] = FHash(-1, 1);
         v[1] = FHash(-1, 1);
         v[2] = FHash(-1, 1);
-        AxisRotationMatrix(m, v, (((t&0xfff)/SysF32(0xfff))  * 2 * acos(-1)));
+        GFXAxisRotationMatrix(m, v, (((t&0xfff)/SysF32(0xfff))  * 2 * acos(-1)));
         m[12] = FHash(-8, 8);
         m[13] = FHash(-8, 8);
         m[14] = FHash(-3, -100);

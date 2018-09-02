@@ -14,6 +14,108 @@
 
 #include <math.h>
 
+SysF32 *GFXAxisRotationMatrix(SysF32 *M4x4, const SysF32 *Axis, SysF32 Angle) {
+  SysF32 axis[3];
+  V3Normalize(axis, Axis);
+  SysF32 s = sinf(Angle);
+  SysF32 c = cosf(Angle);
+  SysF32 oc = 1.0 - c;
+
+  SysF32 m[16] = {oc * axis[0] * axis[0] + c,
+                  oc * axis[0] * axis[1] - axis[2] * s,
+                  oc * axis[2] * axis[0] + axis[1] * s,
+                  0.0,
+                  oc * axis[0] * axis[1] + axis[2] * s,
+                  oc * axis[1] * axis[1] + c,
+                  oc * axis[1] * axis[2] - axis[0] * s,
+                  0.0,
+                  oc * axis[2] * axis[0] - axis[1] * s,
+                  oc * axis[1] * axis[2] + axis[0] * s,
+                  oc * axis[2] * axis[2] + c,
+                  0.0,
+                  0.0,
+                  0.0,
+                  0.0,
+                  1.0};
+  M4Copy(M4x4, m);
+  return M4x4;
+}
+
+
+void GFXCreateRods(SysS32 Segments,SysF32 CapScale,const GFXV *V,const SysU16 *Index,SysS32 Rods,GFXBVI *vib,SysS32 *Verts,SysS32 *Indices)
+{
+	const SysS32 SingleRodVerts=(Segments*2+2);
+	*Verts=Rods*SingleRodVerts;
+	const SysS32 SingleRodIndices=(Segments*(6+2*3));
+	*Indices=Rods*SingleRodIndices;
+	GFXV *v=(GFXV *)SysScratchMemory;;
+	SysU16 *i=(SysU16 *)(&SysScratchMemory[(*Verts)*sizeof(GFXV)]);
+	SysS32 vo=0,io=0;
+	SysF32 RotM[4*4];
+	for(int r=0;r<Rods;r++)
+	{
+		const GFXV rv[2]={V[Index[r*2]],V[Index[r*2+1]]};
+		GFXV dv,nv;
+		SysF32 rndv[3]={7477,-2953,1021};
+		V3Sub(&(dv.x),&(rv[1].x),&(rv[0].x));
+		V3Sub(rndv,rndv,&(rv[0].x));
+		V3Cross(rndv,rndv,&(dv.x));
+		V3Normalize(&(nv.x),rndv);
+		SysS32 vocheck=vo;
+		v[vo]=rv[0];
+		V3SMul(&(v[vo].u),&(dv.x),-v[vo].t*CapScale);
+		v[vo].t=0;
+		vo++;
+		
+		v[vo]=rv[1];
+		V3SMul(&(v[vo].u),&(dv.x),v[vo].t*CapScale);
+		v[vo].t=0;
+		vo++;
+		
+		for(int s=0;s<Segments;s++)
+		{
+		  GFXAxisRotationMatrix(RotM,&(dv.x),s*(acosf(-1)*2)/Segments);
+		  SysF32 vn[3];
+		  M4V3Mul(vn,RotM,&(nv.x));
+		  v[vo]=rv[0];
+		  V3SMul(&(v[vo].u),vn,v[vo].t);
+		  v[vo].t=0;
+		  vo++;
+		  v[vo]=rv[1];
+		  V3SMul(&(v[vo].u),vn,v[vo].t);
+		  v[vo].t=0;
+		  vo++;
+		}
+		SysAssert(SingleRodVerts==(vo-vocheck));
+		SysS32 iocheck=io;
+		for(int s=0;s<Segments;s++)
+		{
+		  SysS32 s1=(s+1)%Segments;
+		  i[io++]=vocheck+0;i[io++]=vocheck+2+s*2;i[io++]=vocheck+2*s1+2;
+		  i[io++]=vocheck+2+s*2+1;i[io++]=vocheck+2+s*2+0;i[io++]=vocheck+2*s1+2+0;
+		  i[io++]=vocheck+2+s*2+1;i[io++]=vocheck+2+s1*2+0;i[io++]=vocheck+2*s1+2+1;
+		  i[io++]=vocheck+1;i[io++]=vocheck+2+s*2+1;i[io++]=vocheck+2*s1+2+1;
+		}
+		SysAssert(SingleRodIndices==(io-iocheck));
+	}
+	for(int j=0;j<*Verts;j++)
+	{
+		if(!(j%SingleRodVerts)) SysODS("\n");
+		SysODS("Vert %4d: %f %f,%f, 0x%08x, %f,%f,%f,%f   ",j,
+		v[j].x,v[j].y,v[j].z, v[j].rgba, v[j].u, v[j].v, v[j].s, v[j].t);
+
+	}
+	SysODS("Indices:\n");
+	for(int j=0;j<*Indices;j++)
+	{
+		if(!(j%SingleRodIndices)) SysODS("\n");
+		SysODS("%d ",i[j]);
+	}
+	SysODS("\n");
+	GFXBufferVerts(vib, v, Rods*SingleRodVerts);
+	GFXBufferIndices(vib, i, Rods*SingleRodIndices);
+}
+
 SysS32 GFXTxtLen(const SysC8 *t) {
   SysS32 i = 0;
   while (t[i])
