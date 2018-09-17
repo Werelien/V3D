@@ -13,10 +13,10 @@ project "V3D"
       defines { "SYS_DEBUG_ODS" }
       symbols "On"
 
-      links { "GL", "SDL2","SDL2_ttf" }
+      links { "GL", "SDL2"}
 
    filter "configurations:Release"
       defines { "SYS_RELEASE_ODS" }
       optimize "On"
 
-      links { "GL", "SDL2","SDL2_ttf" }
+      links { "GL", "SDL2"}
