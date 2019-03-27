@@ -41,7 +41,8 @@ SysF32 *GFXAxisRotationMatrix(SysF32 *M4x4, const SysF32 *Axis, SysF32 Angle) {
   return M4x4;
 }
 
-
+#define SysODSRod(...)
+//#define SysODSRod(...) SysODS(__VA_ARGS__)
 void GFXCreateRods(SysS32 Segments,const GFXV *V,const SysU16 *Index,SysS32 Rods,GFXBVI *vib,SysS32 *Verts,SysS32 *Indices)
 {
 	const SysS32 SingleRodVerts=(Segments*2+2);
@@ -55,8 +56,8 @@ void GFXCreateRods(SysS32 Segments,const GFXV *V,const SysU16 *Index,SysS32 Rods
 	for(int r=0;r<Rods;r++)
 	{
 		const GFXV rv[2]={V[Index[r*2]],V[Index[r*2+1]]};
-		SysODS("Line Vert 0:%f %f,%f, 0x%08x, %f,%f,%f,%f\n",rv[0].x,rv[0].y,rv[0].z,rv[0].rgba,rv[0].u,rv[0].v,rv[0].s,rv[0].t);
-		SysODS("Line Vert 1:%f %f,%f, 1x%08x, %f,%f,%f,%f\n",rv[1].x,rv[1].y,rv[1].z,rv[1].rgba,rv[1].u,rv[1].v,rv[1].s,rv[1].t);
+		SysODSRod("Line Vert 0:%f %f,%f, 0x%08x, %f,%f,%f,%f\n",rv[0].x,rv[0].y,rv[0].z,rv[0].rgba,rv[0].u,rv[0].v,rv[0].s,rv[0].t);
+		SysODSRod("Line Vert 1:%f %f,%f, 1x%08x, %f,%f,%f,%f\n",rv[1].x,rv[1].y,rv[1].z,rv[1].rgba,rv[1].u,rv[1].v,rv[1].s,rv[1].t);
 		GFXV dv,nv;
 		SysF32 rndv[3]={7477,-2953,1021};
 		V3Sub(&(dv.x),&(rv[1].x),&(rv[0].x));
@@ -102,18 +103,18 @@ void GFXCreateRods(SysS32 Segments,const GFXV *V,const SysU16 *Index,SysS32 Rods
 	}
 	for(int j=0;j<*Verts;j++)
 	{
-		if(!(j%SingleRodVerts)) SysODS("\n");
-		SysODS("Vert %4d: %f %f,%f, 0x%08x, %f,%f,%f,%f   ",j,
+		if(!(j%SingleRodVerts)) SysODSRod("\n");
+		SysODSRod("Vert %4d: %f %f,%f, 0x%08x, %f,%f,%f,%f   ",j,
 		v[j].x,v[j].y,v[j].z, v[j].rgba, v[j].u, v[j].v, v[j].s, v[j].t);
 
 	}
-	SysODS("Indices:\n");
+	SysODSRod("Indices:\n");
 	for(int j=0;j<*Indices;j++)
 	{
-		if(!(j%SingleRodIndices)) SysODS("\n");
-		SysODS("%d ",i[j]);
+		if(!(j%SingleRodIndices)) SysODSRod("\n");
+		SysODSRod("%d ",i[j]);
 	}
-	SysODS("\n");
+	SysODSRod("\n");
 	GFXBufferVerts(vib, v, Rods*SingleRodVerts);
 	GFXBufferIndices(vib, i, Rods*SingleRodIndices);
 }

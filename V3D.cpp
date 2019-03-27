@@ -62,7 +62,7 @@ void UpdateScreenWH(SysF32 FOVAngle) {
   ScreenW=w;ScreenH=h;
 }
 SysU32 DebugFlags=0;
-SysS32 Segments=8;
+SysS32 Segments=32;
 void RenderCubes(int n, int s, int t, bool LineMode, int LineWidth,
                  SysF32 Opacity, SysU32 RGB = 0xffffff, SysU32 A = 0xff) {
   GFXShaderM4(0, ProjM);
